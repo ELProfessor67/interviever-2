@@ -1,0 +1,220 @@
+
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=Plasmik+Pro:wght@700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 240 5% 14%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 5% 14%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 5% 14%;
+
+    --primary: 217 77% 37%;   /* #1b51a1 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 96%;
+    --secondary-foreground: 240 5% 14%;
+
+    --muted: 220 20% 96%;
+    --muted-foreground: 240 5% 40%;
+
+    --accent: 45 100% 65%;    /* Yellow accent - used sparingly */
+    --accent-foreground: 240 5% 14%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 90%;
+    --input: 220 20% 90%;
+    --ring: 217 77% 37%;      /* #1b51a1 */
+
+    --radius: 0.8rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5% 26%;
+    --sidebar-primary: 240 6% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 5% 96%;
+    --sidebar-accent-foreground: 240 6% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Added accent colors to match the logo */
+    --logo-blue: 217 77% 37%;  /* #1b51a1 */
+    --logo-orange: 30 100% 60%;
+  }
+
+  .dark {
+    --background: 240 5% 14%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 5% 16%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 5% 16%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 217 77% 37%;   /* #1b51a1 */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 22%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 5% 22%;
+    --muted-foreground: 240 5% 65%;
+
+    --accent: 45 100% 65%;    /* Yellow accent - used sparingly */
+    --accent-foreground: 240 5% 14%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5% 22%;
+    --input: 240 5% 22%;
+    --ring: 217 77% 37%;      /* #1b51a1 */
+
+    --sidebar-background: 240 6% 10%;
+    --sidebar-foreground: 240 5% 96%;
+    --sidebar-primary: 217 77% 37%;  /* #1b51a1 */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 4% 16%;
+    --sidebar-accent-foreground: 240 5% 96%;
+    --sidebar-border: 240 4% 16%;
+    --sidebar-ring: 217 91% 60%;
+
+    /* Added accent colors to match the logo */
+    --logo-blue: 217 77% 37%;  /* #1b51a1 */
+    --logo-orange: 30 100% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-feature-settings: "ss01", "ss02", "cv01", "cv03";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss01", "ss02", "cv01", "cv03";
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-plasmik font-bold;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/20 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/30;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+}
+
+/* Common utility classes */
+.product-image-mask {
+  mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dark .glass-card {
+  background: rgba(30, 30, 35, 0.7);
+  border: 1px solid rgba(60, 60, 70, 0.5);
+}
+
+/* Text contrast fixes */
+.light-bg-text {
+  @apply text-gray-800;
+}
+
+.dark-bg-text {
+  @apply text-gray-100;
+}
+
+/* Fix for color contrast issues in Insight Conductor */
+.insight-conductor h1,
+.insight-conductor h2,
+.insight-conductor h3,
+.insight-conductor p,
+.insight-conductor li {
+  @apply text-gray-800 dark:text-gray-100;
+}
+
+/* Prevent white text on light backgrounds */
+.bg-white .text-white,
+.bg-gray-100 .text-white,
+.bg-gray-200 .text-white {
+  @apply text-gray-800;
+}
+
+/* Ensure dark backgrounds have appropriate text */
+.bg-gray-800 h1,
+.bg-gray-800 h2,
+.bg-gray-800 h3,
+.bg-gray-900 h1,
+.bg-gray-900 h2,
+.bg-gray-900 h3 {
+  @apply text-gray-100;
+}
+
+.bg-gray-800 p,
+.bg-gray-900 p {
+  @apply text-gray-300;
+}
+
+/* Fix vertical spacing issues between sections */
+section + section {
+  @apply mt-0;
+}
+
+/* Ensure proper padding on mobile */
+@media (max-width: 640px) {
+  .container {
+    @apply px-4;
+  }
+  
+  section {
+    @apply py-10;
+  }
+}
