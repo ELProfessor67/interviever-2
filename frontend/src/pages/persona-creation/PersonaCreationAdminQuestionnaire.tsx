@@ -445,7 +445,7 @@ const PersonaCreationQuestionnaire = () => {
                       <p className="text-sm text-gray-500 mb-2">Add questions to structure the interview.</p>
                       {questions.map((question) => (
                         <div key={question.id} className="p-4 border rounded w-full bg-gray-50 mt-4">
-                          <Select onValueChange={(value) => updateQuestionSection(question.id, value as unknown as number)} value={question.section_id.toString()}>
+                          <Select onValueChange={(value) => updateQuestionSection(question.id, value as unknown as number)} value={question?.section_id?.toString()}>
                             <SelectTrigger>
                               <SelectValue placeholder="Select Section" />
                             </SelectTrigger>
