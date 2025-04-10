@@ -1,7 +1,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowRight, PlusCircle, Save } from "lucide-react";
+import { ArrowRight, CircleX, Cross, CrossIcon, PlusCircle, Save } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -39,6 +39,7 @@ const Rawprompt = `
 
     Your task is to:  
     - Follow the given structure and ask questions naturally, without revealing section names or predefined structure.  
+    - Make sure to ask the questions in sequence — first ask all the questions from the first section, then move to the next section. 
     - Ask questions one by one, making the conversation feel organic and engaging.  
     - Keep track of the elapsed time and transition smoothly between topics without making it obvious when switching sections.  
     - If a section is marked as "CRITICAL" priority, ask deeper follow-up questions for every question in that section before moving on.  
@@ -88,18 +89,18 @@ const generateStructuredPromptData = (
           ${importanceInfo || "      - None"}
               Follow-Up Questions:
           ${followups || "      - None"}`;
-                  })
-                  .join("\n");
+        })
+        .join("\n");
 
-                return `---  
+      return `---  
           Section: ${section.name}  
           Priority: ${section.priority}  
           Time Limit: ${section.time} minutes  
           Questions:  
           ${questionsFormatted || "    None"}  
           ---`;
-              })
-              .join("\n\n");
+    })
+    .join("\n\n");
 };
 
 
@@ -118,6 +119,11 @@ const PersonaCreationQuestionnaire = () => {
     setSections([...sections, { id: Date.now(), name: "", priority: "", time: "" }]);
   };
 
+  const deleteSection = (id: any) => {
+    console.log(id, sections)
+    setSections(prev => prev.filter(section => section.id.toString() != id.toString()))
+  }
+
   const updateQuestionSection = (questionId: number, sectionId: number) => {
     const section = sections.find(section => section.id.toString() === sectionId.toString());
     const sectionName = section ? section.name : "";
@@ -134,8 +140,12 @@ const PersonaCreationQuestionnaire = () => {
   };
 
 
-  const addQuestion = () => {
-    setQuestions([...questions, { id: Date.now(), priority: "", question: "", section_name: "", section_id: null, importance_info: [''], followup_questions: [''] }]);
+  const addQuestion = (id: any, name: any) => {
+    setQuestions([...questions, { id: Date.now(), priority: "", question: "", section_name: name, section_id: id, importance_info: [''], followup_questions: [''] }]);
+  }
+
+  const deleteQuestion = (id: any) => {
+    setQuestions(prev => prev.filter(question => question.id.toString() != id.toString()));
   }
 
   const addImportanceInfo = (questionId: number) => {
@@ -148,6 +158,8 @@ const PersonaCreationQuestionnaire = () => {
     }
     ));
   }
+
+
   const addFollowupQuestion = (questionId: number) => {
     setQuestions(questions.map(question => {
       if (question.id === questionId) {
@@ -177,6 +189,17 @@ const PersonaCreationQuestionnaire = () => {
     ));
   }
 
+  const deleteImportantInfo = (questionId: number, index: number) => {
+    setQuestions(questions.map(question => {
+      if (question.id === questionId) {
+        const updatedImportanceInfo = question.importance_info.filter((_, i) => i != index);
+        return { ...question, importance_info: updatedImportanceInfo };
+      }
+      return question;
+    }
+    ));
+  }
+
   const updateFollowupQuestion = (questionId: number, index: number, value: string) => {
     setQuestions(questions.map(question => {
       if (question.id === questionId) {
@@ -190,40 +213,52 @@ const PersonaCreationQuestionnaire = () => {
   }
 
 
+  const deleteFollowupQuestion = (questionId: number, index: number) => {
+    setQuestions(questions.map(question => {
+      if (question.id === questionId) {
+        const updatedFollowupQuestions = question.followup_questions.filter((_, i) => i != index);
+        return { ...question, followup_questions: updatedFollowupQuestions };
+      }
+      return question;
+    }
+    ));
+  }
+
+
 
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-  
+
     try {
       if (sections.length === 0 || sections.some(s => !s.name || !s.priority || !s.time)) {
         setError("At least one complete section is required.");
         return;
       }
-  
+
       if (questions.length === 0 || questions.some(q => !q.question || !q.section_id)) {
         setError("At least one complete question is required and must be linked to a section.");
         return;
       }
-  
+
       setError(null);
-  
+
       // Try fetching first existing persona
       const { data: existing, error: fetchError } = await supabase
         .from("interview_personas")
         .select("*")
         .limit(1)
         .single(); // will return null if no row exists
-  
+
       if (fetchError && fetchError.code !== "PGRST116") {
         console.error("Error checking existing persona:", fetchError);
         setError("Failed to check existing data.");
         return;
       }
-  
+
       let result;
-  
+
       if (existing) {
         // Update the first existing row
         const { data, error } = await supabase
@@ -236,7 +271,7 @@ const PersonaCreationQuestionnaire = () => {
             name
           })
           .eq("id", existing.id);
-  
+
         result = { data, error };
       } else {
         // Insert new row
@@ -251,16 +286,16 @@ const PersonaCreationQuestionnaire = () => {
               questions,
             },
           ]);
-  
+
         result = { data, error };
       }
-  
+
       if (result.error) {
         console.error("Supabase save error:", result.error);
         setError("Failed to save data.");
         return;
       }
-  
+
       console.log("Saved persona:", result.data);
     } catch (error) {
       console.error("Unexpected error during save:", error);
@@ -268,9 +303,9 @@ const PersonaCreationQuestionnaire = () => {
       setIsSubmitting(false);
     }
   };
-  
-  
-  
+
+
+
 
   // const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
   //   e.preventDefault();
@@ -282,17 +317,17 @@ const PersonaCreationQuestionnaire = () => {
   //       setError("Persona Name is required.");
   //       return;
   //     }
-  
+
   //     if (sections.length === 0 || sections.some(s => !s.name || !s.priority || !s.time)) {
   //       setError("At least one complete section is required.");
   //       return;
   //     }
-  
+
   //     if (questions.length === 0 || questions.some(q => !q.question || !q.section_id)) {
   //       setError("At least one complete question is required and must be linked to a section.");
   //       return;
   //     }
-  
+
   //     setError(null);
 
   //      // Save to Supabase
@@ -324,18 +359,18 @@ const PersonaCreationQuestionnaire = () => {
 
 
   useEffect(() => {
-    const data = generateStructuredPromptData(sections,questions);
+    const data = generateStructuredPromptData(sections, questions);
     const totalTime = sections.reduce((acc, section) => {
       const time = parseInt(section.time, 10);
       return acc + (isNaN(time) ? 0 : time);
-    }, 0);    
-    const preparePrompt = Rawprompt.replace("[sections_data_append_here]",data)
-    .replace("[name]",name || "Parsona AI")
-    .replace("[total_time]",totalTime.toString())
+    }, 0);
+    const preparePrompt = Rawprompt.replace("[sections_data_append_here]", data)
+      .replace("[name]", name || "Parsona AI")
+      .replace("[total_time]", totalTime.toString())
 
     setFinalPrompt(preparePrompt)
 
-  },[sections,questions,name]);
+  }, [sections, questions, name]);
 
 
   useEffect(() => {
@@ -345,14 +380,14 @@ const PersonaCreationQuestionnaire = () => {
         .select("*")
         .limit(1)
         .single();
-  
+
       if (error) {
         if (error.code !== "PGRST116") {
           console.error("Error fetching existing persona:", error);
         }
         return;
       }
-  
+
       // Prefill form data
       setName(data.name || ""); // Add this too so it matches existing persona
       setPrompt(data.prompt || "");
@@ -360,10 +395,10 @@ const PersonaCreationQuestionnaire = () => {
       setSections(data.sections || []);
       setQuestions(data.questions || []);
     };
-  
+
     fetchPersona();
   }, []);
-  
+
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -403,16 +438,21 @@ const PersonaCreationQuestionnaire = () => {
 
 
 
-                    <div className="w-full border rounded p-4">
+                    <div className="w-full">
                       <label className="block font-medium text-gray-700 mb-2 text-2xl">Sections</label>
                       <p className="text-sm text-gray-500 mb-2">Add sections to structure the interview.</p>
                       {sections.map((section) => (
-                        <div key={section.id} className="p-4 border rounded w-full bg-gray-50 mt-4">
+                        <div key={section.id} className="p-4 rounded w-full bg-gray-50 mt-4 relative border">
+
+                          <Button size="icon" type="button" variant="ghost" className="absolute top-2 right-2 hover:bg-gray-100" onClick={() => deleteSection(section.id)}>
+                            <CircleX />
+                          </Button>
+
                           <Input
                             placeholder="Section Name"
                             value={section.name}
                             onChange={(e) => updateSection(section.id, "name", e.target.value)}
-                            className="mb-2"
+                            className="mb-2 mt-8"
                           />
                           <Select onValueChange={(value) => updateSection(section.id, "priority", value)} value={section.priority}>
                             <SelectTrigger>
@@ -432,6 +472,81 @@ const PersonaCreationQuestionnaire = () => {
                             className="mt-2"
                           />
 
+                          <div className="w-full mt-5">
+                            <label className="block font-medium text-gray-700 mb-2 text-2xl">Questions</label>
+                            {questions.filter(q => q.section_id == section.id).map((question) => (
+                              <div key={question.id} className=" w-full bg-gray-50 mt-10 relative border p-4 rounded-md">
+                                <div className="mb-8">
+                                  <Button size="icon" type="button" variant="ghost" className="absolute -top-0 right-0 hover:bg-gray-100" onClick={() => deleteQuestion(question.id)}>
+                                    <CircleX />
+                                  </Button>
+                                </div>
+
+
+
+                                <div className="mt-8">
+                                  <Select onValueChange={(value) => updateQuestion(question.id, "priority", value)} value={question.priority}>
+                                    <SelectTrigger>
+                                      <SelectValue placeholder="Select Priority" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="Low">Low</SelectItem>
+                                      <SelectItem value="Medium">Medium</SelectItem>
+                                      <SelectItem value="High">High</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <Textarea
+                                  placeholder="Question"
+                                  value={question.question}
+                                  onChange={(e) => updateQuestion(question.id, "question", e.target.value)}
+                                  className="mt-2"
+                                />
+
+                                <h2 className="text-md mt-4">Important Info</h2>
+                                {
+                                  question.importance_info.map((info, index) => (
+                                    <div className="flex items-center mt-2 gap-2" key={index}>
+                                      <Input
+                                        key={index}
+                                        placeholder="Important Info"
+                                        value={info}
+                                        onChange={(e) => updateImportanceInfo(question.id, index, e.target.value)}
+                                        className="mt-2 flex-1"
+                                      />
+                                      <div className="flex items-center">
+                                        <Button type="button" onClick={() => addImportanceInfo(question.id)} className="mt-2"><PlusCircle /></Button>
+                                        <Button type="button" onClick={() => deleteImportantInfo(question.id, index)} className="mt-2 ml-1"><CircleX /></Button>
+                                      </div>
+                                    </div>
+                                  ))
+                                }
+
+                                <h2 className="text-md mt-4">Follow Up Question</h2>
+                                {
+                                  question.followup_questions.map((info, index) => (
+                                    <div className="flex items-center mt-2 gap-2" key={index}>
+                                      <Input
+                                        key={index}
+                                        placeholder="Follow Up Question"
+                                        value={info}
+                                        onChange={(e) => updateFollowupQuestion(question.id, index, e.target.value)}
+                                        className="mt-2"
+                                      />
+                                      <div className="flex items-center">
+                                        <Button type="button" onClick={() => addFollowupQuestion(question.id)} className="mt-2"><PlusCircle /></Button>
+                                        <Button type="button" onClick={() => deleteFollowupQuestion(question.id, index)} className="mt-2 ml-2"><CircleX /></Button>
+                                      </div>
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                            ))}
+
+                            <div className="flex items-center justify-end w-full mt-4">
+                              <Button type="button" onClick={() => addQuestion(section.id, section.name)}>Add Question</Button>
+                            </div>
+                          </div>
                         </div>
                       ))}
 
@@ -440,81 +555,7 @@ const PersonaCreationQuestionnaire = () => {
                       </div>
                     </div>
 
-                    <div className="w-full border rounded p-4">
-                      <label className="block font-medium text-gray-700 mb-2 text-2xl">Questions</label>
-                      <p className="text-sm text-gray-500 mb-2">Add questions to structure the interview.</p>
-                      {questions.map((question) => (
-                        <div key={question.id} className="p-4 border rounded w-full bg-gray-50 mt-4">
-                          <Select onValueChange={(value) => updateQuestionSection(question.id, value as unknown as number)} value={question?.section_id?.toString()}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select Section" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {
-                                sections.map((section) => (
-                                  <SelectItem key={section.id} value={section.id.toString()}>{section.name}</SelectItem>
-                                ))
-                              }
-                            </SelectContent>
-                          </Select>
 
-                          <div className="mt-2">
-                            <Select onValueChange={(value) => updateQuestion(question.id, "priority", value)} value={question.priority}>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select Priority" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Low">Low</SelectItem>
-                                <SelectItem value="Medium">Medium</SelectItem>
-                                <SelectItem value="High">High</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Textarea
-                            placeholder="Question"
-                            value={question.question}
-                            onChange={(e) => updateQuestion(question.id, "question", e.target.value)}
-                            className="mt-2"
-                          />
-
-                          <h2 className="text-md mt-4">Important Info</h2>
-                          {
-                            question.importance_info.map((info, index) => (
-                              <div className="flex items-center mt-2 gap-2" key={index}>
-                                <Input
-                                  key={index}
-                                  placeholder="Important Info"
-                                  value={info}
-                                  onChange={(e) => updateImportanceInfo(question.id, index, e.target.value)}
-                                  className="mt-2 flex-1"
-                                />
-                                <Button type="button" onClick={() => addImportanceInfo(question.id)} className="mt-2"><PlusCircle /></Button>
-                              </div>
-                            ))
-                          }
-
-                          <h2 className="text-md mt-4">Follow Up Question</h2>
-                          {
-                            question.followup_questions.map((info, index) => (
-                              <div className="flex items-center mt-2 gap-2" key={index}>
-                                <Input
-                                  key={index}
-                                  placeholder="Follow Up Question"
-                                  value={info}
-                                  onChange={(e) => updateFollowupQuestion(question.id, index, e.target.value)}
-                                  className="mt-2"
-                                />
-                                <Button type="button" onClick={() => addFollowupQuestion(question.id)} className="mt-2"><PlusCircle /></Button>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      ))}
-
-                      <div className="flex items-center justify-end w-full mt-4">
-                        <Button type="button" onClick={addQuestion}>Add Question</Button>
-                      </div>
-                    </div>
                     <div className="p-4 border rounded w-full bg-gray-50">
                       <div className="mt-4">
                         <label className="block text-sm font-medium text-gray-700">Prompt</label>

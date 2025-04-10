@@ -5,26 +5,25 @@ import React, { useEffect, useMemo, useRef, useCallback, useState } from 'react'
 import { PlaygroundTile } from './AudioTile';
 import { TranscriptionTile } from './Transcription';
 import Header from "@/components/layout/Header";
-import {  Volume2, Mic, MicOff, PhoneOff } from "lucide-react";
+import { Volume2, Mic, MicOff, PhoneOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import Reveal from "@/components/ui-custom/Reveal";
+import { useKrispNoiseFilter } from "@livekit/components-react/krisp";
 
 const Playground = () => {
   const { localParticipant } = useLocalParticipant();
-  const [isMuted,setIsMuted] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const roomState = useConnectionState();
   const room = useRoomContext()
   const voiceAssistant = useVoiceAssistant();
   const navigate = useNavigate();
-
-
-  // console.log(voiceAssistant.audioTrack,"audio tacks")
+  const krisp = useKrispNoiseFilter();
 
   const toggleMute = () => {
     setIsMuted(prev => !prev);
   }
-  
+
 
   const endCall = () => {
     room.disconnect();
@@ -32,10 +31,15 @@ const Playground = () => {
   }
 
   useEffect(() => {
+
     if (roomState === ConnectionState.Connected) {
       localParticipant.setMicrophoneEnabled(!isMuted);
     }
-  }, [localParticipant, roomState,isMuted]);
+  }, [localParticipant, roomState, isMuted]);
+
+  useEffect(() => {
+    krisp.setNoiseFilterEnabled(true);
+  },[])
 
   return (
     <div className="min-h-screen flex flex-col">
