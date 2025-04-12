@@ -21,7 +21,7 @@ from itertools import tee
 import requests
 import os
 import json
-
+from deepgram_stt import DeepgramSTT
 logger = logging.getLogger("voice-assistant")
 load_dotenv()
 
@@ -69,12 +69,14 @@ async def entrypoint(ctx: JobContext):
         elapsed_time_min = (current_time - meeting_start_time) / 60
         transcriptions.append(f"Interview: {chat_ctx.messages[len(chat_ctx.messages)-2].content}")
         transcriptions.append(f"Candidate: {chat_ctx.messages[len(chat_ctx.messages)-1].content}")
+        print("8765:Assistant: ",chat_ctx.messages[len(chat_ctx.messages)-2].content)
+        print("8765:User: ",chat_ctx.messages[len(chat_ctx.messages)-1].content)
         chat_ctx.messages[len(chat_ctx.messages)-1].content = f"ElapsedTime: {elapsed_time_min}min, CandidateSays: {chat_ctx.messages[len(chat_ctx.messages)-1]}"
 
 
     agent = VoicePipelineAgent(
         vad=ctx.proc.userdata["vad"],
-        stt=deepgram.STT(model=dg_model,interim_results=False,endpointing_ms=2000),
+        stt=DeepgramSTT(model=dg_model,interim_results=False,smart_format=True,endpointing_ms=500),
         before_llm_cb=before_llm,
         llm=openai_llm,
         tts=tts.TTS(model="aura-asteria-en"),

@@ -52,6 +52,9 @@ const Rawprompt = `
     - If the total interview time is about to exceed and some important sections or questions are still pending, begin to wrap up the conversation more quickly. Prioritize the remaining important topics, ask concise but meaningful follow-ups, and complete the interview naturally without making the candidate feel rushed.
     - Once all sections are completed, conclude the interview professionally. Thank the candidate, summarize key points if necessary, and say goodbye in a polite and professional manner.
     
+    Important:
+      - if candidate response <continue> then give empty '' response.
+
     Total Interview Time: [total_time] minutes  
     
     [sections_data_append_here]
