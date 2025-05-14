@@ -240,10 +240,10 @@ const PersonaCreationQuestionnaire = () => {
         return;
       }
 
-      if (questions.length === 0 || questions.some(q => !q.question || !q.section_id)) {
-        setError("At least one complete question is required and must be linked to a section.");
-        return;
-      }
+      // if (questions.length === 0 || questions.some(q => !q.question || !q.section_id)) {
+      //   setError("At least one complete question is required and must be linked to a section.");
+      //   return;
+      // }
 
       setError(null);
 
